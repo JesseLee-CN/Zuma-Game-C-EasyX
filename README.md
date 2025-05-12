@@ -27,4 +27,4 @@
 1. 安装[EasyX图形库](https://easyx.cn)
 2. 克隆本仓库：
    ```bash
-   git clone https://github.com/JesseLee-CN/Zuma-Game-C-C-.git
+   git clone https://github.com/JesseLee-CN/Zuma-Game-C-EasyX.git
