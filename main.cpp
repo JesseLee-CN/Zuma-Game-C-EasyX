@@ -11,7 +11,7 @@
 COLORREF ballColorTable[] = {
 BLUE, GREEN, RED, YELLOW, MAGENTA, BROWN
 };
-
+//test for github lkt 2025/12/5
 //»æÍ¼º¯ÊýÊ¾Àý
 void drawExample(void)
 {
