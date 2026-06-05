@@ -9,6 +9,14 @@
 #define TOTAL_THETA (4 * 3.14159265358979)
 #define PI         3.14159265358979
 
+#define MAX_POPUPS 8
+
+struct ScorePopup {
+	float x, y;
+	int score;
+	int life;
+};
+
 int BALLRADIUS;
 int winWidth = 600, winHeight = 600;
 int centerX, centerY;
@@ -257,6 +265,9 @@ int main()
 	int aimy = centerY;
 	float vx = 0, vy = 0;
 	int counter = 0;
+	int totalScore = 0;
+	ScorePopup popups[MAX_POPUPS];
+	int popupCount = 0;
 
 	BeginBatchDraw();
 	srand(time(NULL));
@@ -328,7 +339,16 @@ int main()
 		{
 			ListInsert(head, id, cball);
 			updateBallPos(head);
-			EliminateRuns(head);
+			int earned = EliminateRuns(head);
+			totalScore += earned;
+			if (earned > 0 && popupCount < MAX_POPUPS) {
+				ScorePopup sp;
+				sp.x = (float)cball.x;
+				sp.y = (float)cball.y;
+				sp.score = earned;
+				sp.life = 30;
+				popups[popupCount++] = sp;
+			}
 			updateBallPos(head);
 
 			cball.c = rand() % 6;
@@ -360,6 +380,41 @@ int main()
 			drawColBall(&cball, centerX, centerY);
 		}
 		
+		// Update and render score popups
+		for (int i = 0; i < popupCount; ) {
+			popups[i].y -= 0.6f;
+			popups[i].life--;
+			if (popups[i].life <= 0) {
+				popups[i] = popups[--popupCount];
+			} else {
+				i++;
+			}
+		}
+		int popupFontH = BALLRADIUS * 2;
+		if (popupFontH < 10) popupFontH = 10;
+		settextstyle(popupFontH, 0, NULL);
+		setbkmode(TRANSPARENT);
+		for (int i = 0; i < popupCount; i++) {
+			int brightness = popups[i].life * 255 / 30;
+			int r = brightness;
+			int g = brightness;
+			int b = 0;
+			settextcolor(RGB(r, g, b));
+			char buf[16];
+			sprintf(buf, "+%d", popups[i].score);
+			int tw = textwidth(buf);
+			outtextxy((int)(popups[i].x - tw / 2), (int)popups[i].y, buf);
+		}
+		// Draw total score in top-right corner
+		int scoreFontH = BALLRADIUS * 3;
+		if (scoreFontH < 14) scoreFontH = 14;
+		settextstyle(scoreFontH, 0, NULL);
+		settextcolor(RGB(255, 255, 200));
+		char scoreStr[32];
+		sprintf(scoreStr, "Score: %d", totalScore);
+		int sw = textwidth(scoreStr);
+		outtextxy(winWidth - sw - 10, 10, scoreStr);
+
 		FlushBatchDraw();
 		Sleep(16);
 	}

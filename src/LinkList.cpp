@@ -135,8 +135,10 @@ DataType ListDelete(Node *head, unsigned int index)
 	return data;
 }
 
-void EliminateRuns(Node *head)
+int EliminateRuns(Node *head)
 {
+	int totalScore = 0;
+	int chainLevel = 0;
 	bool found;
 
 	do {
@@ -163,6 +165,12 @@ void EliminateRuns(Node *head)
 					p = next;
 				}
 				prev->next = afterRun;
+
+				chainLevel++;
+				int baseScore = count * count * 10;
+				double chainMul = 1.0 + (chainLevel - 1) * 0.5;
+				totalScore += (int)(baseScore * chainMul);
+
 				found = true;
 				break;
 			}
@@ -170,4 +178,6 @@ void EliminateRuns(Node *head)
 			prev = runEnd;
 		}
 	} while (found);
+
+	return totalScore;
 }

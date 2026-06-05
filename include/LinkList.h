@@ -27,7 +27,7 @@ void ListInsert(Node *head, unsigned int index, DataType data);
 
 DataType ListDelete(Node *head, unsigned int index);
 
-void EliminateRuns(Node *head);
+int EliminateRuns(Node *head);
 
 
 #endif
