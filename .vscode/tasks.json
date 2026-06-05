@@ -2,8 +2,8 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: gcc.exe build Zuma Game",
-            "command": "D:\\EnviroConfig\\mingw64\\bin\\gcc.exe",
+            "label": "C/C++: gcc build Zuma Game",
+            "command": "gcc",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
