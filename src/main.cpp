@@ -214,18 +214,22 @@ void drawSpiralGuide()
 
 int main()
 {
-	// ��ʼ����ͼ����
-	initgraph(winWidth, winHeight);
+	// 以桌面分辨率创建大缓冲，窗口初始缩放为 600x600
+	{
+		RECT wa;
+		SystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0);
+		initgraph(wa.right - wa.left, wa.bottom - wa.top);
 
-	HWND hwnd = GetHWnd();
-	SetWindowLongPtr(hwnd, GWL_STYLE,
-		WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPCHILDREN);
+		HWND hwnd = GetHWnd();
+		SetWindowLongPtr(hwnd, GWL_STYLE,
+			WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPCHILDREN);
 
-	RECT cr = {0, 0, winWidth, winHeight};
-	AdjustWindowRect(&cr, WS_OVERLAPPEDWINDOW, FALSE);
-	SetWindowPos(hwnd, HWND_TOP, 0, 0,
-		cr.right - cr.left, cr.bottom - cr.top,
-		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		RECT cr = {0, 0, winWidth, winHeight};
+		AdjustWindowRect(&cr, WS_OVERLAPPEDWINDOW, FALSE);
+		SetWindowPos(hwnd, HWND_TOP, 0, 0,
+			cr.right - cr.left, cr.bottom - cr.top,
+			SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+	}
 
 	recomputeDimensions();
 	setbkcolor(BLACK);
@@ -266,9 +270,6 @@ int main()
 			winWidth = newW;
 			winHeight = newH;
 			recomputeDimensions();
-			EndBatchDraw();
-			Resize(GetWorkingImage(), winWidth, winHeight);
-			BeginBatchDraw();
 			updateBallPos(head);
 			aimx = centerX + 50;
 			aimy = centerY;
