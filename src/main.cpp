@@ -11,7 +11,7 @@
 #define CANNONY    (WINDOWHEIGHT / 2)
 #define R_OUTER    260
 #define R_INNER    30
-#define TOTAL_THETA (6 * 3.14159265358979)
+#define TOTAL_THETA (4 * 3.14159265358979)
 #define PI         3.14159265358979
 
 COLORREF ballColorTable[] = {
@@ -61,7 +61,7 @@ void updateBallPos(Node* head)
 {
 	const double k = (R_OUTER - R_INNER) / TOTAL_THETA;
 	const double step = 2.0 * BALLRADIUS;
-	const double dtheta = 0.05;
+	const double dtheta = 0.002;
 
 	double theta = 0.0;
 	Node* p = head;
@@ -76,8 +76,17 @@ void updateBallPos(Node* head)
 		while (arc < step) {
 			double r_cur = R_OUTER - k * theta;
 			double r_next = R_OUTER - k * (theta + dtheta);
-			double r_mid = (r_cur + r_next) / 2.0;
-			double ds = sqrt(r_mid * r_mid + k * k) * dtheta;
+			double ds_cur = sqrt(r_cur * r_cur + k * k);
+			double ds_next = sqrt(r_next * r_next + k * k);
+			double ds = (ds_cur + ds_next) / 2.0 * dtheta;
+
+			if (arc + ds > step) {
+				double remaining = step - arc;
+				double rate = (ds_cur + ds_next) / 2.0;
+				theta += remaining / rate;
+				break;
+			}
+
 			arc += ds;
 			theta += dtheta;
 		}
