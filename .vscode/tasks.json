@@ -2,15 +2,19 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: gcc build Zuma Game",
-            "command": "gcc",
+            "label": "C/C++: g++ build Zuma Game",
+            "command": "g++",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
+                "-Wall",
+                "-Wextra",
                 "${workspaceFolder}\\src\\*.cpp",
                 "-I${workspaceFolder}\\include",
                 "-o",
-                "${workspaceFolder}\\build\\ZumaGame.exe"
+                "${workspaceFolder}\\build\\ZumaGame.exe",
+                "-leasyx",
+                "-lgdi32"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -22,7 +26,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Build Zuma Game"
+            "detail": "Build Zuma Game with EasyX"
         }
     ],
     "version": "2.0.0"
