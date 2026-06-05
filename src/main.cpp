@@ -56,26 +56,31 @@ void initBallList(Node* head)
 	}
 }
 
-//��螺旋顺序更新球的位置（由外向内）
+//沿螺旋线按弧长步进布置球（由外向内紧密排列）
 void updateBallPos(Node* head)
 {
-	int n = 0;
-	Node* p = head;
-	while (p->next != NULL) {
-		p = p->next;
-		n++;
-	}
+	const double k = (R_OUTER - R_INNER) / TOTAL_THETA;
+	const double step = 2.0 * BALLRADIUS;
+	const double dtheta = 0.05;
 
-	int index = 0;
-	p = head;
+	double theta = 0.0;
+	Node* p = head;
+
 	while (p->next != NULL) {
 		p = p->next;
-		double t = (n == 1) ? 0.0 : (double)index / (n - 1);
-		double r = R_OUTER - t * (R_OUTER - R_INNER);
-		double theta = t * TOTAL_THETA;
+		double r = R_OUTER - k * theta;
 		p->data.x = (int)(CANNONX + r * cos(theta));
 		p->data.y = (int)(CANNONY + r * sin(theta));
-		index++;
+
+		double arc = 0.0;
+		while (arc < step) {
+			double r_cur = R_OUTER - k * theta;
+			double r_next = R_OUTER - k * (theta + dtheta);
+			double r_mid = (r_cur + r_next) / 2.0;
+			double ds = sqrt(r_mid * r_mid + k * k) * dtheta;
+			arc += ds;
+			theta += dtheta;
+		}
 	}
 }
 
