@@ -157,28 +157,47 @@ void drawSpiralGuide()
 {
 	const double k = (R_OUTER - R_INNER) / TOTAL_THETA;
 	const double dtheta = 0.02;
+	const double dashLen = 14.0;
+	const double gapLen = 8.0;
 
-	setlinestyle(PS_DASH, 2);
 	setcolor(RGB(160, 160, 160));
 
 	double theta = 0.0;
 	double r = R_OUTER;
 	int prev_x = (int)(CANNONX + r * cos(theta));
 	int prev_y = (int)(CANNONY + r * sin(theta));
-	theta += dtheta;
+
+	double segArc = 0.0;
+	bool drawing = true;
 
 	while (theta <= TOTAL_THETA + 0.5) {
+		theta += dtheta;
 		r = R_OUTER - k * theta;
 		if (r < R_INNER) break;
 		int x = (int)(CANNONX + r * cos(theta));
 		int y = (int)(CANNONY + r * sin(theta));
-		line(prev_x, prev_y, x, y);
+
+		double dx = (double)(x - prev_x);
+		double dy = (double)(y - prev_y);
+		double segLen = sqrt(dx * dx + dy * dy);
+		segArc += segLen;
+
+		if (drawing) {
+			line(prev_x, prev_y, x, y);
+			if (segArc >= dashLen) {
+				drawing = false;
+				segArc = 0.0;
+			}
+		} else {
+			if (segArc >= gapLen) {
+				drawing = true;
+				segArc = 0.0;
+			}
+		}
+
 		prev_x = x;
 		prev_y = y;
-		theta += dtheta;
 	}
-
-	setlinestyle(PS_SOLID);
 }
 
 int main()
