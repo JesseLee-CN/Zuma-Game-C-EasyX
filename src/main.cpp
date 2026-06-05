@@ -2,17 +2,28 @@
 #include <conio.h>
 #include <time.h>
 #include <math.h>
+#include <windows.h>
 #include "LinkList.h"
 #include "ball.h"
 
-#define WINDOWWITH 600
-#define WINDOWHEIGHT 600
-#define CANNONX    (WINDOWWITH / 2)
-#define CANNONY    (WINDOWHEIGHT / 2)
-#define R_OUTER    260
-#define R_INNER    30
 #define TOTAL_THETA (4 * 3.14159265358979)
 #define PI         3.14159265358979
+
+int BALLRADIUS;
+int winWidth = 600, winHeight = 600;
+int centerX, centerY;
+double R_OUTER, R_INNER;
+
+void recomputeDimensions()
+{
+	int ref = (winWidth < winHeight ? winWidth : winHeight) / 2;
+	BALLRADIUS = ref * 10 / 300;
+	if (BALLRADIUS < 4) BALLRADIUS = 4;
+	R_OUTER = ref * 260.0 / 300.0;
+	R_INNER = ref * 30.0 / 300.0;
+	centerX = winWidth / 2;
+	centerY = winHeight / 2;
+}
 
 COLORREF ballColorTable[] = {
 BLUE, GREEN, RED, YELLOW, MAGENTA, BROWN
@@ -22,7 +33,7 @@ BLUE, GREEN, RED, YELLOW, MAGENTA, BROWN
 void drawExample(void)
 {
 	// ��ʼ����ͼ����
-	initgraph(WINDOWWITH, WINDOWHEIGHT);
+	initgraph(winWidth, winHeight);
 
 	// ���ñ���ɫ
 	setbkcolor(BLACK);
@@ -69,8 +80,8 @@ void updateBallPos(Node* head)
 	while (p->next != NULL) {
 		p = p->next;
 		double r = R_OUTER - k * theta;
-		p->data.x = (int)(CANNONX + r * cos(theta));
-		p->data.y = (int)(CANNONY + r * sin(theta));
+		p->data.x = (int)(centerX + r * cos(theta));
+		p->data.y = (int)(centerY + r * sin(theta));
 
 		double arc = 0.0;
 		while (arc < step) {
@@ -103,7 +114,8 @@ bool collisionDetection(Node* head, ball b,bool* sameColor,int* id)
 	while (p != NULL)
 	{
 		dist = (p->data.x - b.x) * (p->data.x - b.x) + (p->data.y - b.y) * (p->data.y - b.y);
-		if (dist < 400)
+		int threshold = 2 * BALLRADIUS;
+		if (dist < threshold * threshold)
 		{
 			if (b.c == p->data.c)
 				* (sameColor) = TRUE;
@@ -164,8 +176,8 @@ void drawSpiralGuide()
 
 	double theta = 0.0;
 	double r = R_OUTER;
-	int prev_x = (int)(CANNONX + r * cos(theta));
-	int prev_y = (int)(CANNONY + r * sin(theta));
+	int prev_x = (int)(centerX + r * cos(theta));
+	int prev_y = (int)(centerY + r * sin(theta));
 
 	double segArc = 0.0;
 	bool drawing = true;
@@ -174,8 +186,8 @@ void drawSpiralGuide()
 		theta += dtheta;
 		r = R_OUTER - k * theta;
 		if (r < R_INNER) break;
-		int x = (int)(CANNONX + r * cos(theta));
-		int y = (int)(CANNONY + r * sin(theta));
+		int x = (int)(centerX + r * cos(theta));
+		int y = (int)(centerY + r * sin(theta));
 
 		double dx = (double)(x - prev_x);
 		double dy = (double)(y - prev_y);
@@ -203,7 +215,16 @@ void drawSpiralGuide()
 int main()
 {
 	// ��ʼ����ͼ����
-	initgraph(WINDOWWITH, WINDOWHEIGHT);
+	initgraph(winWidth, winHeight);
+
+	HWND hwnd = GetHWnd();
+	LONG style = GetWindowLong(hwnd, GWL_STYLE);
+	style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
+	SetWindowLong(hwnd, GWL_STYLE, style);
+	SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+		SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+	recomputeDimensions();
 	setbkcolor(BLACK);
 	cleardevice();
 
@@ -218,15 +239,15 @@ int main()
 	ball cball;
 	cball.c = rand() % 6;
 	float speed = 10;
-	drawColBall(&cball, CANNONX, CANNONY);
+	drawColBall(&cball, centerX, centerY);
 
 
 	//�¼�ѭ����������ꡢʱ���¼�
 	MOUSEMSG m;
 	bool ballMoving = FALSE;
 	bool aiming = FALSE;
-	int aimx = CANNONX + 50;
-	int aimy = CANNONY;
+	int aimx = centerX + 50;
+	int aimy = centerY;
 	float vx = 0, vy = 0;
 	int counter = 0;
 
@@ -234,6 +255,25 @@ int main()
 	srand(time(NULL));
 	while (true)
 	{
+		RECT rect;
+		GetClientRect(GetHWnd(), &rect);
+		int newW = rect.right - rect.left;
+		int newH = rect.bottom - rect.top;
+		if (newW >= 200 && newH >= 200 && (newW != winWidth || newH != winHeight)) {
+			winWidth = newW;
+			winHeight = newH;
+			recomputeDimensions();
+			EndBatchDraw();
+			closegraph();
+			initgraph(winWidth, winHeight);
+			setbkcolor(BLACK);
+			cleardevice();
+			BeginBatchDraw();
+			updateBallPos(head);
+			aimx = centerX + 50;
+			aimy = centerY;
+		}
+
 		counter++;
 		// 处理全部待处理鼠标消息
 		while (MouseHit())
@@ -257,8 +297,8 @@ int main()
 				//��������˶�������ʼ�˶�
 				if (aiming && !ballMoving)
 				{
-					float dx = m.x - CANNONX;
-					float dy = CANNONY - m.y;
+					float dx = m.x - centerX;
+					float dy = centerY - m.y;
 					float length = sqrt(dx * dx + dy * dy);
 					if (length > 0) {
 						vx = (dx / length) * speed;
@@ -291,17 +331,17 @@ int main()
 			updateBallPos(head);
 
 			cball.c = rand() % 6;
-			drawColBall(&cball, CANNONX, CANNONY);
+			drawColBall(&cball, centerX, centerY);
 			ballMoving = FALSE;
 
 		}
 		drawBallList(head);
 
 		//�����ײ���Ƿ񳬳���Χ
-		if (cball.x > WINDOWWITH || cball.x <0 || cball.y > WINDOWHEIGHT || cball.y < 0)
+		if (cball.x > winWidth || cball.x <0 || cball.y > winHeight || cball.y < 0)
 		{
 			cball.c = rand() % 6;
-			drawColBall(&cball, CANNONX, CANNONY);
+			drawColBall(&cball, centerX, centerY);
 			ballMoving = FALSE;
 		}
 		if (!ballMoving && aiming) {
@@ -316,7 +356,7 @@ int main()
 		}
 		else
 		{
-			drawColBall(&cball, CANNONX, CANNONY);
+			drawColBall(&cball, centerX, centerY);
 		}
 		
 		FlushBatchDraw();

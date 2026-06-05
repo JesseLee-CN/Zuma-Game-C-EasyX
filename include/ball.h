@@ -6,7 +6,7 @@
 
 #include <graphics.h>
 
-#define BALLRADIUS 10
+extern int BALLRADIUS;
 
 struct ball
 {
