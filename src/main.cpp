@@ -152,6 +152,35 @@ void drawColBall(ball* b, int x, int y)
 }
 
 
+//绘制螺旋辅助线（灰白色虚线）
+void drawSpiralGuide()
+{
+	const double k = (R_OUTER - R_INNER) / TOTAL_THETA;
+	const double dtheta = 0.02;
+
+	setlinestyle(PS_DASH, 2);
+	setcolor(RGB(160, 160, 160));
+
+	double theta = 0.0;
+	double r = R_OUTER;
+	int prev_x = (int)(CANNONX + r * cos(theta));
+	int prev_y = (int)(CANNONY + r * sin(theta));
+	theta += dtheta;
+
+	while (theta <= TOTAL_THETA + 0.5) {
+		r = R_OUTER - k * theta;
+		if (r < R_INNER) break;
+		int x = (int)(CANNONX + r * cos(theta));
+		int y = (int)(CANNONY + r * sin(theta));
+		line(prev_x, prev_y, x, y);
+		prev_x = x;
+		prev_y = y;
+		theta += dtheta;
+	}
+
+	setlinestyle(PS_SOLID);
+}
+
 int main()
 {
 	// ��ʼ����ͼ����
@@ -231,6 +260,7 @@ int main()
 		
 		//��ʱ������������ײ��
 		cleardevice();
+		drawSpiralGuide();
 		int id;
 		bool sameColor;
 		bool collision = collisionDetection(head, cball, &sameColor, &id);
