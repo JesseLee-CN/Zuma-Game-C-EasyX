@@ -207,20 +207,13 @@ int main()
 		cleardevice();
 		int id;
 		bool sameColor;
-		bool collision = collisionDetection(head, cball, &sameColor,&id);
+		bool collision = collisionDetection(head, cball, &sameColor, &id);
 		if (collision)
 		{
-			if (!sameColor)
-			{
-				ListInsert(head, id, cball);
-				updateBallPos(head);
-
-			}
-			else
-			{
-				ListDelete(head, id);
-				updateBallPos(head);
-			}
+			ListInsert(head, id, cball);
+			updateBallPos(head);
+			EliminateRuns(head);
+			updateBallPos(head);
 
 			cball.c = rand() % 6;
 			drawColBall(&cball, WINDOWWITH / 2, WINDOWHEIGHT);

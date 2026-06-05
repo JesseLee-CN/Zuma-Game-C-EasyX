@@ -135,4 +135,39 @@ DataType ListDelete(Node *head, unsigned int index)
 	return data;
 }
 
+void EliminateRuns(Node *head)
+{
+	bool found;
 
+	do {
+		found = false;
+		Node *prev = head;
+
+		while (prev->next != NULL && prev->next->next != NULL) {
+			Node *runStart = prev->next;
+			int color = runStart->data.c;
+			int count = 1;
+			Node *runEnd = runStart;
+
+			while (runEnd->next != NULL && runEnd->next->data.c == color) {
+				runEnd = runEnd->next;
+				count++;
+			}
+
+			if (count >= 3) {
+				Node *p = runStart;
+				Node *afterRun = runEnd->next;
+				while (p != afterRun) {
+					Node *next = p->next;
+					free(p);
+					p = next;
+				}
+				prev->next = afterRun;
+				found = true;
+				break;
+			}
+
+			prev = runEnd;
+		}
+	} while (found);
+}
