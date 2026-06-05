@@ -7,6 +7,12 @@
 
 #define WINDOWWITH 600
 #define WINDOWHEIGHT 600
+#define CANNONX    (WINDOWWITH / 2)
+#define CANNONY    (WINDOWHEIGHT / 2)
+#define R_OUTER    260
+#define R_INNER    30
+#define TOTAL_THETA (6 * 3.14159265358979)
+#define PI         3.14159265358979
 
 COLORREF ballColorTable[] = {
 BLUE, GREEN, RED, YELLOW, MAGENTA, BROWN
@@ -50,21 +56,27 @@ void initBallList(Node* head)
 	}
 }
 
-//�������������λ��
+//��螺旋顺序更新球的位置（由外向内）
 void updateBallPos(Node* head)
 {
+	int n = 0;
 	Node* p = head;
-	int x = 10;
-	int y = WINDOWHEIGHT / 2;
-	while (p->next != NULL)
-	{
+	while (p->next != NULL) {
 		p = p->next;
-		
-		p->data.x = x;
-		x = x + BALLRADIUS * 2;
-		p->data.y = y;
+		n++;
 	}
 
+	int index = 0;
+	p = head;
+	while (p->next != NULL) {
+		p = p->next;
+		double t = (n == 1) ? 0.0 : (double)index / (n - 1);
+		double r = R_OUTER - t * (R_OUTER - R_INNER);
+		double theta = t * TOTAL_THETA;
+		p->data.x = (int)(CANNONX + r * cos(theta));
+		p->data.y = (int)(CANNONY + r * sin(theta));
+		index++;
+	}
 }
 
 //����ײ���
@@ -144,15 +156,15 @@ int main()
 	ball cball;
 	cball.c = rand() % 6;
 	float speed = 10;
-	drawColBall(&cball, WINDOWWITH / 2, WINDOWHEIGHT);
+	drawColBall(&cball, CANNONX, CANNONY);
 
 
 	//�¼�ѭ����������ꡢʱ���¼�
 	MOUSEMSG m;
 	bool ballMoving = FALSE;
 	bool aiming = FALSE;
-	int aimy = WINDOWWITH / 2;
-	int aimx = WINDOWHEIGHT;
+	int aimx = CANNONX + 50;
+	int aimy = CANNONY;
 	float vx = 0, vy = 0;
 	int counter = 0;
 
@@ -183,8 +195,8 @@ int main()
 				//��������˶�������ʼ�˶�
 				if (aiming && !ballMoving)
 				{
-					float dx = m.x - (WINDOWWITH / 2);
-					float dy = (WINDOWHEIGHT - m.y);
+					float dx = m.x - CANNONX;
+					float dy = CANNONY - m.y;
 					float length = sqrt(dx * dx + dy * dy);
 					if (length > 0) {
 						vx = (dx / length) * speed;
@@ -216,7 +228,7 @@ int main()
 			updateBallPos(head);
 
 			cball.c = rand() % 6;
-			drawColBall(&cball, WINDOWWITH / 2, WINDOWHEIGHT);
+			drawColBall(&cball, CANNONX, CANNONY);
 			ballMoving = FALSE;
 
 		}
@@ -226,7 +238,7 @@ int main()
 		if (cball.x > WINDOWWITH || cball.x <0 || cball.y > WINDOWHEIGHT || cball.y < 0)
 		{
 			cball.c = rand() % 6;
-			drawColBall(&cball, WINDOWWITH / 2, WINDOWHEIGHT);
+			drawColBall(&cball, CANNONX, CANNONY);
 			ballMoving = FALSE;
 		}
 		if (!ballMoving && aiming) {
@@ -241,7 +253,7 @@ int main()
 		}
 		else
 		{
-			drawColBall(&cball, WINDOWWITH / 2, WINDOWHEIGHT);
+			drawColBall(&cball, CANNONX, CANNONY);
 		}
 		
 		FlushBatchDraw();
