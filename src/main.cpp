@@ -760,8 +760,14 @@ int main()
 
 				// Check game over after collision resolution
 				if (state == PLAYING && remainingShots == 0 && head->next != NULL) {
+					int remBalls = 0;
+					Node* np = head->next;
+					while (np != NULL) { remBalls++; np = np->next; }
+					totalScore -= remBalls * 20;
+					if (totalScore < 0) totalScore = 0;
 					gameWon = false;
-					state = SETTLEMENT;
+					state = CLEARING;
+					clearFrame = 0;
 				}
 			}
 			drawBallList(head);
@@ -774,8 +780,14 @@ int main()
 				ballMoving = FALSE;
 
 				if (remainingShots == 0 && head->next != NULL) {
+					int remBalls = 0;
+					Node* np = head->next;
+					while (np != NULL) { remBalls++; np = np->next; }
+					totalScore -= remBalls * 20;
+					if (totalScore < 0) totalScore = 0;
 					gameWon = false;
-					state = SETTLEMENT;
+					state = CLEARING;
+					clearFrame = 0;
 				}
 			}
 			if (!ballMoving && aiming) {
