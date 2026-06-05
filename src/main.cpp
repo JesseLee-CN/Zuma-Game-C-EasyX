@@ -156,12 +156,13 @@ int main()
 	float vx = 0, vy = 0;
 	int counter = 0;
 
+	BeginBatchDraw();
 	srand(time(NULL));
 	while (true)
 	{
 		counter++;
-		// ��ȡһ�������Ϣ
-		if (MouseHit())
+		// 处理全部待处理鼠标消息
+		while (MouseHit())
 		{
 			m = GetMouseMsg();
 			switch (m.uMsg)
@@ -195,6 +196,7 @@ int main()
 				break;
 
 			case WM_RBUTTONUP:
+				EndBatchDraw();
 				DestroyList(head);
 				closegraph();
 				return 0;	// ������Ҽ��˳�����
@@ -249,6 +251,7 @@ int main()
 			drawColBall(&cball, WINDOWWITH / 2, WINDOWHEIGHT);
 		}
 		
+		FlushBatchDraw();
 		Sleep(16);
 	}
 
