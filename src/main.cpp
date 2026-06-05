@@ -17,6 +17,8 @@ struct ScorePopup {
 	int life;
 };
 
+enum GameState { PLAYING, CLEARING, SETTLEMENT };
+
 int BALLRADIUS;
 int winWidth = 600, winHeight = 600;
 int centerX, centerY;
@@ -137,7 +139,7 @@ bool collisionDetection(Node* head, ball b,bool* sameColor,int* id)
 		index++;
 	}
 	return FALSE;
-		
+
 }
 
 //�������
@@ -220,6 +222,21 @@ void drawSpiralGuide()
 	}
 }
 
+void drawButton(int x, int y, int w, int h, const char* text, int fontH, bool hovered)
+{
+	setfillcolor(hovered ? RGB(80, 80, 80) : RGB(40, 40, 40));
+	setcolor(hovered ? WHITE : RGB(180, 180, 180));
+	fillroundrect(x, y, x + w, y + h, 8, 8);
+	roundrect(x, y, x + w, y + h, 8, 8);
+
+	settextstyle(fontH, 0, NULL);
+	setbkmode(TRANSPARENT);
+	settextcolor(hovered ? WHITE : RGB(200, 200, 200));
+	int tw = textwidth(text);
+	int th = textheight(text);
+	outtextxy(x + (w - tw) / 2, y + (h - th) / 2, text);
+}
+
 int main()
 {
 	// 以桌面分辨率创建大缓冲，窗口初始缩放为 600x600
@@ -268,6 +285,8 @@ int main()
 	int totalScore = 0;
 	ScorePopup popups[MAX_POPUPS];
 	int popupCount = 0;
+	GameState state = PLAYING;
+	int clearFrame = 0;
 
 	BeginBatchDraw();
 	srand(time(NULL));
@@ -281,139 +300,333 @@ int main()
 			winWidth = newW;
 			winHeight = newH;
 			recomputeDimensions();
-			updateBallPos(head);
+			if (state == PLAYING)
+				updateBallPos(head);
 			aimx = centerX + 50;
 			aimy = centerY;
 		}
 
 		counter++;
+
 		// 处理全部待处理鼠标消息
 		while (MouseHit())
 		{
 			m = GetMouseMsg();
-			switch (m.uMsg)
-			{
-			case WM_MOUSEMOVE:
-				aimx = m.x;
-				aimy = m.y;
-				break;
-			case WM_LBUTTONDOWN:
-				if (!ballMoving)
+
+			if (state == SETTLEMENT) {
+				switch (m.uMsg)
 				{
-					aiming = TRUE;
+				case WM_MOUSEMOVE:
 					aimx = m.x;
 					aimy = m.y;
-				}
-				break;
-			case WM_LBUTTONUP:
-				//��������˶�������ʼ�˶�
-				if (aiming && !ballMoving)
+					break;
+				case WM_LBUTTONUP:
 				{
-					float dx = m.x - centerX;
-					float dy = centerY - m.y;
-					float length = sqrt(dx * dx + dy * dy);
-					if (length > 0) {
-						vx = (dx / length) * speed;
-						vy = (dy / length) * speed;
+					int btnW = winWidth * 3 / 10;
+					if (btnW < 120) btnW = 120;
+					int btnH = winHeight * 8 / 100;
+					if (btnH < 36) btnH = 36;
+					int btnSpacing = btnH / 2;
+					int btnX = centerX - btnW / 2;
+					int tryAgainY = centerY + winHeight / 6;
+					int exitY = tryAgainY + btnH + btnSpacing;
+
+					if (m.x >= btnX && m.x <= btnX + btnW) {
+						if (m.y >= tryAgainY && m.y <= tryAgainY + btnH) {
+							DestroyList(head);
+							head = CreateEmptyList();
+							initBallList(head);
+							updateBallPos(head);
+							totalScore = 0;
+							popupCount = 0;
+							ballMoving = FALSE;
+							aiming = FALSE;
+							cball.c = rand() % 6;
+							drawColBall(&cball, centerX, centerY);
+							state = PLAYING;
+						} else if (m.y >= exitY && m.y <= exitY + btnH) {
+							EndBatchDraw();
+							DestroyList(head);
+							closegraph();
+							return 0;
+						}
 					}
-					ballMoving = TRUE;
-					aiming = FALSE;
+					break;
 				}
-				break;
+				case WM_RBUTTONUP:
+					EndBatchDraw();
+					DestroyList(head);
+					closegraph();
+					return 0;
+				}
+			} else if (state == PLAYING) {
+				switch (m.uMsg)
+				{
+				case WM_MOUSEMOVE:
+					aimx = m.x;
+					aimy = m.y;
+					break;
+				case WM_LBUTTONDOWN:
+					if (!ballMoving)
+					{
+						aiming = TRUE;
+						aimx = m.x;
+						aimy = m.y;
+					}
+					break;
+				case WM_LBUTTONUP:
+					//��������˶�������ʼ�˶�
+					if (aiming && !ballMoving)
+					{
+						float dx = m.x - centerX;
+						float dy = centerY - m.y;
+						float length = sqrt(dx * dx + dy * dy);
+						if (length > 0) {
+							vx = (dx / length) * speed;
+							vy = (dy / length) * speed;
+						}
+						ballMoving = TRUE;
+						aiming = FALSE;
+					}
+					break;
 
-			case WM_RBUTTONUP:
-				EndBatchDraw();
-				DestroyList(head);
-				closegraph();
-				return 0;	// ������Ҽ��˳�����
+				case WM_RBUTTONUP:
+					EndBatchDraw();
+					DestroyList(head);
+					closegraph();
+					return 0;
+				}
 			}
+			// CLEARING state: ignore all mouse input
 		}
-		
-		//��ʱ������������ײ��
+
 		cleardevice();
-		drawSpiralGuide();
-		int id;
-		bool sameColor;
-		bool collision = collisionDetection(head, cball, &sameColor, &id);
-		if (collision)
+
+		switch (state) {
+		case PLAYING:
 		{
-			ListInsert(head, id, cball);
-			updateBallPos(head);
-			int earned = EliminateRuns(head);
-			totalScore += earned;
-			if (earned > 0 && popupCount < MAX_POPUPS) {
-				ScorePopup sp;
-				sp.x = (float)cball.x;
-				sp.y = (float)cball.y;
-				sp.score = earned;
-				sp.life = 30;
-				popups[popupCount++] = sp;
+			//��ʱ������������ײ��
+			drawSpiralGuide();
+			int id;
+			bool sameColor;
+			bool collision = collisionDetection(head, cball, &sameColor, &id);
+			if (collision)
+			{
+				ListInsert(head, id, cball);
+				updateBallPos(head);
+				int earned = EliminateRuns(head);
+				totalScore += earned;
+				if (earned > 0 && popupCount < MAX_POPUPS) {
+					ScorePopup sp;
+					sp.x = (float)cball.x;
+					sp.y = (float)cball.y;
+					sp.score = earned;
+					sp.life = 30;
+					popups[popupCount++] = sp;
+				}
+				updateBallPos(head);
+
+				if (head->next == NULL) {
+					state = CLEARING;
+					clearFrame = 0;
+				}
+
+				cball.c = rand() % 6;
+				drawColBall(&cball, centerX, centerY);
+				ballMoving = FALSE;
+
 			}
-			updateBallPos(head);
+			drawBallList(head);
 
-			cball.c = rand() % 6;
-			drawColBall(&cball, centerX, centerY);
-			ballMoving = FALSE;
+			//�����ײ���Ƿ񳬳���Χ
+			if (cball.x > winWidth || cball.x <0 || cball.y > winHeight || cball.y < 0)
+			{
+				cball.c = rand() % 6;
+				drawColBall(&cball, centerX, centerY);
+				ballMoving = FALSE;
+			}
+			if (!ballMoving && aiming) {
+				setcolor(WHITE);
+				line(cball.x, cball.y, aimx, aimy);
+			}
 
+			//�ƶ���������ײ��
+			if(ballMoving == TRUE)
+			{
+				drawColBall(&cball, cball.x += vx , cball.y -= vy);
+			}
+			else
+			{
+				drawColBall(&cball, centerX, centerY);
+			}
+			break;
 		}
-		drawBallList(head);
 
-		//�����ײ���Ƿ񳬳���Χ
-		if (cball.x > winWidth || cball.x <0 || cball.y > winHeight || cball.y < 0)
+		case CLEARING:
 		{
-			cball.c = rand() % 6;
-			drawColBall(&cball, centerX, centerY);
-			ballMoving = FALSE;
-		}
-		if (!ballMoving && aiming) {
-			setcolor(WHITE);
-			line(cball.x, cball.y, aimx, aimy);
-		}
-		
-		//�ƶ���������ײ��
-		if(ballMoving == TRUE) 
-		{
-			drawColBall(&cball, cball.x += vx , cball.y -= vy);
-		}
-		else
-		{
-			drawColBall(&cball, centerX, centerY);
-		}
-		
-		// Update and render score popups
-		for (int i = 0; i < popupCount; ) {
-			popups[i].y -= 0.6f;
-			popups[i].life--;
-			if (popups[i].life <= 0) {
-				popups[i] = popups[--popupCount];
+			clearFrame++;
+
+			if (clearFrame < 60) {
+				// Phase A: render game with fading overlay
+				drawSpiralGuide();
+				drawColBall(&cball, centerX, centerY);
+
+				// fade overlay: scanlines getting denser
+				int lineGap = 16 - clearFrame * 15 / 59;
+				if (lineGap < 1) lineGap = 1;
+				setcolor(BLACK);
+				for (int y = 0; y < winHeight; y += lineGap)
+					line(0, y, winWidth, y);
+
+			} else if (clearFrame < 120) {
+				// Phase B: score flies from corner to center
+				float t = (clearFrame - 60) / 60.0f;
+				if (t > 1.0f) t = 1.0f;
+
+				int cornerFontH = BALLRADIUS * 3;
+				if (cornerFontH < 14) cornerFontH = 14;
+				int centerFontH = winHeight / 6;
+				if (centerFontH < 24) centerFontH = 24;
+				int curFontH = cornerFontH + (int)((centerFontH - cornerFontH) * t);
+
+				settextstyle(curFontH, 0, NULL);
+				setbkmode(TRANSPARENT);
+				settextcolor(RGB(255, 255, 200));
+
+				char scoreStr[32];
+				sprintf(scoreStr, "Score: %d", totalScore);
+				int tw = textwidth(scoreStr);
+
+				int startX = winWidth - tw - 10;
+				int startY = 10;
+				int endX = centerX - tw / 2;
+				int endY = centerY - curFontH / 2;
+
+				int curX = startX + (int)((endX - startX) * t);
+				int curY = startY + (int)((endY - startY) * t);
+				outtextxy(curX, curY, scoreStr);
 			} else {
-				i++;
+				state = SETTLEMENT;
 			}
+
+			// Update and render score popups (Phase A only)
+			if (clearFrame < 60) {
+				for (int i = 0; i < popupCount; ) {
+					popups[i].y -= 0.6f;
+					popups[i].life--;
+					if (popups[i].life <= 0) {
+						popups[i] = popups[--popupCount];
+					} else {
+						i++;
+					}
+				}
+				int popupFontH = BALLRADIUS * 2;
+				if (popupFontH < 10) popupFontH = 10;
+				settextstyle(popupFontH, 0, NULL);
+				setbkmode(TRANSPARENT);
+				for (int i = 0; i < popupCount; i++) {
+					int brightness = popups[i].life * 255 / 30;
+					settextcolor(RGB(brightness, brightness, 0));
+					char buf[16];
+					sprintf(buf, "+%d", popups[i].score);
+					int tw = textwidth(buf);
+					outtextxy((int)(popups[i].x - tw / 2), (int)popups[i].y, buf);
+				}
+			}
+
+			// Corner score during Phase A
+			if (clearFrame < 60) {
+				int scoreFontH = BALLRADIUS * 3;
+				if (scoreFontH < 14) scoreFontH = 14;
+				settextstyle(scoreFontH, 0, NULL);
+				settextcolor(RGB(255, 255, 200));
+				char scoreStr[32];
+				sprintf(scoreStr, "Score: %d", totalScore);
+				int sw = textwidth(scoreStr);
+				outtextxy(winWidth - sw - 10, 10, scoreStr);
+			}
+			break;
 		}
-		int popupFontH = BALLRADIUS * 2;
-		if (popupFontH < 10) popupFontH = 10;
-		settextstyle(popupFontH, 0, NULL);
-		setbkmode(TRANSPARENT);
-		for (int i = 0; i < popupCount; i++) {
-			int brightness = popups[i].life * 255 / 30;
-			int r = brightness;
-			int g = brightness;
-			int b = 0;
-			settextcolor(RGB(r, g, b));
-			char buf[16];
-			sprintf(buf, "+%d", popups[i].score);
-			int tw = textwidth(buf);
-			outtextxy((int)(popups[i].x - tw / 2), (int)popups[i].y, buf);
+
+		case SETTLEMENT:
+		{
+			// Title
+			int titleFontH = winHeight / 12;
+			if (titleFontH < 18) titleFontH = 18;
+			settextstyle(titleFontH, 0, NULL);
+			setbkmode(TRANSPARENT);
+			settextcolor(RGB(100, 255, 100));
+			const char* title = "CLEAR!";
+			int ttw = textwidth(title);
+			outtextxy(centerX - ttw / 2, winHeight / 8, title);
+
+			// Final score
+			int scoreFontH = winHeight / 6;
+			if (scoreFontH < 24) scoreFontH = 24;
+			settextstyle(scoreFontH, 0, NULL);
+			settextcolor(RGB(255, 255, 200));
+			char scoreStr[32];
+			sprintf(scoreStr, "Score: %d", totalScore);
+			int sw = textwidth(scoreStr);
+			outtextxy(centerX - sw / 2, centerY - scoreFontH, scoreStr);
+
+			// Buttons
+			int btnW = winWidth * 3 / 10;
+			if (btnW < 120) btnW = 120;
+			int btnH = winHeight * 8 / 100;
+			if (btnH < 36) btnH = 36;
+			int btnFontH = btnH / 2;
+			int btnSpacing = btnH / 2;
+			int btnX = centerX - btnW / 2;
+
+			int tryAgainY = centerY + winHeight / 6;
+			int exitY = tryAgainY + btnH + btnSpacing;
+
+			bool hoverTryAgain = (aimx >= btnX && aimx <= btnX + btnW &&
+				aimy >= tryAgainY && aimy <= tryAgainY + btnH);
+			bool hoverExit = (aimx >= btnX && aimx <= btnX + btnW &&
+				aimy >= exitY && aimy <= exitY + btnH);
+
+			drawButton(btnX, tryAgainY, btnW, btnH, "TRY AGAIN", btnFontH, hoverTryAgain);
+			drawButton(btnX, exitY, btnW, btnH, "EXIT", btnFontH, hoverExit);
+			break;
 		}
-		// Draw total score in top-right corner
-		int scoreFontH = BALLRADIUS * 3;
-		if (scoreFontH < 14) scoreFontH = 14;
-		settextstyle(scoreFontH, 0, NULL);
-		settextcolor(RGB(255, 255, 200));
-		char scoreStr[32];
-		sprintf(scoreStr, "Score: %d", totalScore);
-		int sw = textwidth(scoreStr);
-		outtextxy(winWidth - sw - 10, 10, scoreStr);
+		}
+
+		// During PLAYING state, render popups and corner score (after game rendering)
+		if (state == PLAYING) {
+			// Update and render score popups
+			for (int i = 0; i < popupCount; ) {
+				popups[i].y -= 0.6f;
+				popups[i].life--;
+				if (popups[i].life <= 0) {
+					popups[i] = popups[--popupCount];
+				} else {
+					i++;
+				}
+			}
+			int popupFontH = BALLRADIUS * 2;
+			if (popupFontH < 10) popupFontH = 10;
+			settextstyle(popupFontH, 0, NULL);
+			setbkmode(TRANSPARENT);
+			for (int i = 0; i < popupCount; i++) {
+				int brightness = popups[i].life * 255 / 30;
+				settextcolor(RGB(brightness, brightness, 0));
+				char buf[16];
+				sprintf(buf, "+%d", popups[i].score);
+				int tw = textwidth(buf);
+				outtextxy((int)(popups[i].x - tw / 2), (int)popups[i].y, buf);
+			}
+			// Draw total score in top-right corner
+			int scoreFontH = BALLRADIUS * 3;
+			if (scoreFontH < 14) scoreFontH = 14;
+			settextstyle(scoreFontH, 0, NULL);
+			settextcolor(RGB(255, 255, 200));
+			char scoreStr[32];
+			sprintf(scoreStr, "Score: %d", totalScore);
+			int sw = textwidth(scoreStr);
+			outtextxy(winWidth - sw - 10, 10, scoreStr);
+		}
 
 		FlushBatchDraw();
 		Sleep(16);
@@ -421,4 +634,3 @@ int main()
 
 
 }
-	
