@@ -269,6 +269,16 @@ int main()
 			EndBatchDraw();
 			closegraph();
 			initgraph(winWidth, winHeight);
+
+			HWND rhwnd = GetHWnd();
+			SetWindowLongPtr(rhwnd, GWL_STYLE,
+				WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPCHILDREN);
+			RECT rcr = {0, 0, winWidth, winHeight};
+			AdjustWindowRect(&rcr, WS_OVERLAPPEDWINDOW, FALSE);
+			SetWindowPos(rhwnd, HWND_TOP, 0, 0,
+				rcr.right - rcr.left, rcr.bottom - rcr.top,
+				SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
 			setbkcolor(BLACK);
 			cleardevice();
 			BeginBatchDraw();
