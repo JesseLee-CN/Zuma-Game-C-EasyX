@@ -267,6 +267,7 @@ int main()
 			winHeight = newH;
 			recomputeDimensions();
 			EndBatchDraw();
+			Resize(GetWorkingImage(), winWidth, winHeight);
 			BeginBatchDraw();
 			updateBallPos(head);
 			aimx = centerX + 50;
