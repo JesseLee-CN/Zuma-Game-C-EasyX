@@ -262,7 +262,8 @@ int main()
 		GetClientRect(GetHWnd(), &rect);
 		int newW = rect.right - rect.left;
 		int newH = rect.bottom - rect.top;
-		if (newW >= 200 && newH >= 200 && (newW != winWidth || newH != winHeight)) {
+		if (newW >= 200 && newH >= 200
+			&& (abs(newW - winWidth) > 4 || abs(newH - winHeight) > 4)) {
 			winWidth = newW;
 			winHeight = newH;
 			recomputeDimensions();
