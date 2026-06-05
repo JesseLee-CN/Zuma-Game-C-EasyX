@@ -218,11 +218,14 @@ int main()
 	initgraph(winWidth, winHeight);
 
 	HWND hwnd = GetHWnd();
-	LONG style = GetWindowLong(hwnd, GWL_STYLE);
-	style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
-	SetWindowLong(hwnd, GWL_STYLE, style);
-	SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
-		SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+	SetWindowLongPtr(hwnd, GWL_STYLE,
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPCHILDREN);
+
+	RECT cr = {0, 0, winWidth, winHeight};
+	AdjustWindowRect(&cr, WS_OVERLAPPEDWINDOW, FALSE);
+	SetWindowPos(hwnd, HWND_TOP, 0, 0,
+		cr.right - cr.left, cr.bottom - cr.top,
+		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
 	recomputeDimensions();
 	setbkcolor(BLACK);
