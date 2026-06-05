@@ -39,31 +39,31 @@ COLORREF ballColorTable[] = {
 BLUE, GREEN, RED, YELLOW, MAGENTA, BROWN
 };
 //test for github lkt 2025/12/5
-//��ͼ����ʾ��
+//绘图演示程序
 void drawExample(void)
 {
-	// ��ʼ����ͼ����
+	// 初始化绘图窗口
 	initgraph(winWidth, winHeight);
 
-	// ���ñ���ɫ
+	// 设置背景颜色
 	setbkcolor(BLACK);
-	// �ñ���ɫ�����Ļ
+	// 用背景色清屏幕
 	cleardevice();
 
-	// ���û�ͼɫΪ��ɫ
+	// 设置画图色为红色
 	setcolor(RED);
 	setfillcolor(RED);
 
-	// ������
+	// 画矩形
 	rectangle(100, 100, 300, 300);
 	solidcircle(200, 200, 100);
 
-	// ��������˳�
+	// 按任意键退出
 	_getch();
 	closegraph();
 }
 
-//��ʼ��������
+//初始化球链表
 void initBallList(Node* head, int count)
 {
 	int i;
@@ -112,7 +112,7 @@ void updateBallPos(Node* head)
 	}
 }
 
-//����ײ���
+//碰撞检测
 bool collisionDetection(Node* head, ball b,bool* sameColor,int* id)
 {
 	Node* p = head->next;
@@ -139,7 +139,7 @@ bool collisionDetection(Node* head, ball b,bool* sameColor,int* id)
 	return FALSE;
 }
 
-//�������
+//绘制球链
 void drawBallList(Node* head)
 {
 	Node* p;
@@ -159,7 +159,7 @@ void drawBallList(Node* head)
 	}
 }
 
-//������ײ��
+//绘制碰撞球
 void drawColBall(ball* b, int x, int y)
 {
 	b->x = x;
