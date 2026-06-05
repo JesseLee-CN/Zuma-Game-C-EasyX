@@ -1,0 +1,29 @@
+# Build outputs
+build/
+Debug/
+Release/
+*.exe
+*.obj
+*.o
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.dll
+*.so
+*.out
+*.app
+
+# IDE files
+.idea/
+.vs/
+*.vcxproj.user
+*.vcxproj.filters
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS generated files
+Thumbs.db
+.DS_Store
+Desktop.ini
