@@ -46,10 +46,12 @@ $$score = N^2 \times 10 \times \bigl(1 + (k-1) \times 0.5\bigr)$$
 - 支持拖动边框和最大化/还原
 
 ### 技术实现
-- 单向链表实现动态球链存储
-- EasyX 图形界面实时渲染
+- **双向链表**实现动态球链存储：`Node` 含 `prev` / `next` 指针，`EliminateRuns` 消除后通过 `prev` 回溯至局部位置继续扫描，避免每轮连锁从表头重扫
+- **浮点坐标**跟踪球位置：`ball` 结构体 `x, y` 为 `float` 类型，避免低速分量每帧整数截断归零导致的运动方向偏差
+- EasyX 图形界面实时渲染，桌面分辨率大缓冲区策略支持窗口缩放/最大化无黑屏
+- 双缓冲渲染（`BeginBatchDraw` / `FlushBatchDraw`）消除画面闪烁
 - 数值积分弧长算法精确控制球间距
-- Windows API 窗口样式控制
+- Windows API 窗口样式控制，`-mwindows` 链接标志消除控制台窗口
 - 五状态游戏状态机（MENU / CUSTOMIZE / PLAYING / CLEARING / SETTLEMENT）
 
 ## 项目结构
