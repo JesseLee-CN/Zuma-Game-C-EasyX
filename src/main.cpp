@@ -190,8 +190,8 @@ void drawSpiralGuide()
 {
 	const double k = (R_OUTER - R_INNER) / TOTAL_THETA;
 	const double dtheta = 0.02;
-	const double dashLen = 14.0;
-	const double gapLen = 8.0;
+	const double dashLen = BALLRADIUS * 1.4;
+	const double gapLen = BALLRADIUS * 0.8;
 
 	setcolor(RGB(160, 160, 160));
 
@@ -237,8 +237,9 @@ void drawButton(int x, int y, int w, int h, const char* text, int fontH, bool ho
 {
 	setfillcolor(hovered ? RGB(80, 80, 80) : RGB(40, 40, 40));
 	setcolor(hovered ? WHITE : RGB(180, 180, 180));
-	fillroundrect(x, y, x + w, y + h, 8, 8);
-	roundrect(x, y, x + w, y + h, 8, 8);
+	int rad = h / 8; if (rad < 4) rad = 4;
+	fillroundrect(x, y, x + w, y + h, rad, rad);
+	roundrect(x, y, x + w, y + h, rad, rad);
 
 	settextstyle(fontH, 0, NULL);
 	setbkmode(TRANSPARENT);
@@ -325,12 +326,20 @@ int main()
 		int newW = rect.right - rect.left;
 		int newH = rect.bottom - rect.top;
 		if (newW >= 200 && newH >= 200 && (newW != winWidth || newH != winHeight)) {
+			int oldCX = centerX, oldCY = centerY, oldBR = BALLRADIUS;
 			winWidth = newW;
 			winHeight = newH;
 			recomputeDimensions();
 			if (state == PLAYING && head != NULL)
 				updateBallPos(head);
-			aimx = centerX + 50;
+			if (state == PLAYING && ballMoving) {
+				float scale = (float)BALLRADIUS / (float)oldBR;
+				cball.x = centerX + (cball.x - oldCX) * scale;
+				cball.y = centerY + (cball.y - oldCY) * scale;
+				vx *= scale;
+				vy *= scale;
+			}
+			aimx = centerX + BALLRADIUS * 5;
 			aimy = centerY;
 		}
 
@@ -838,7 +847,7 @@ int main()
 				drawSpiralGuide();
 				drawColBall(&cball, centerX, centerY);
 
-				int lineGap = 16 - clearFrame * 15 / 59;
+				int startGap = winHeight / 37; if (startGap < 2) startGap = 2; int lineGap = startGap - clearFrame * (startGap - 1) / 59;
 				if (lineGap < 1) lineGap = 1;
 				setcolor(BLACK);
 				for (int y = 0; y < winHeight; y += lineGap)
@@ -877,7 +886,7 @@ int main()
 			// Popups and corner score during Phase A
 			if (clearFrame < 60) {
 				for (int i = 0; i < popupCount; ) {
-					popups[i].y -= 0.6f;
+					popups[i].y -= BALLRADIUS * 0.06f;
 					popups[i].life--;
 					if (popups[i].life <= 0) {
 						popups[i] = popups[--popupCount];
@@ -962,7 +971,7 @@ int main()
 		// ---- Post-render: popups + score HUD (PLAYING only) ----
 		if (state == PLAYING) {
 			for (int i = 0; i < popupCount; ) {
-				popups[i].y -= 0.6f;
+				popups[i].y -= BALLRADIUS * 0.06f;
 				popups[i].life--;
 				if (popups[i].life <= 0) {
 					popups[i] = popups[--popupCount];
