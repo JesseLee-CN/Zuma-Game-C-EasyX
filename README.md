@@ -89,7 +89,7 @@ Zuma-Game-C-EasyX/
 
 ### 手动编译
 ```bash
-g++ -g -Wall -Wextra -Iinclude src/main.cpp src/LinkList.cpp \
+g++ -g -Wall -Wextra -mwindows -Iinclude src/main.cpp src/LinkList.cpp \
     -o build/ZumaGame.exe -leasyx -lgdi32
 ```
 

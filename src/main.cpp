@@ -242,9 +242,13 @@ bool inRect(int mx, int my, int x, int y, int w, int h)
 
 int main()
 {
-	// 以初始窗口尺寸创建图形缓冲区，避免坐标系与桌面分辨率不一致
+	// 以桌面分辨率创建大缓冲区，确保缩放/最大化有足够空间显示
 	{
-		initgraph(winWidth, winHeight);
+		RECT wa;
+		SystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0);
+		int bufW = wa.right - wa.left;
+		int bufH = wa.bottom - wa.top;
+		initgraph(bufW, bufH);
 
 		HWND hwnd = GetHWnd();
 		SetWindowLongPtr(hwnd, GWL_STYLE,
@@ -255,6 +259,13 @@ int main()
 		SetWindowPos(hwnd, HWND_TOP, 0, 0,
 			cr.right - cr.left, cr.bottom - cr.top,
 			SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+		// 同步 winWidth/winHeight 与 SetWindowPos 后的实际客户区尺寸，
+		// 确保游戏坐标系与 EasyX 鼠标坐标一致
+		RECT actualRect;
+		GetClientRect(hwnd, &actualRect);
+		winWidth = actualRect.right - actualRect.left;
+		winHeight = actualRect.bottom - actualRect.top;
 	}
 
 	recomputeDimensions();

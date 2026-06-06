@@ -9,6 +9,7 @@
                 "-g",
                 "-Wall",
                 "-Wextra",
+                "-mwindows",
                 "${workspaceFolder}\\src\\*.cpp",
                 "-I${workspaceFolder}\\include",
                 "-o",
