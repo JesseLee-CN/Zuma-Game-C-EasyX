@@ -116,7 +116,7 @@ void updateBallPos(Node* head)
 bool collisionDetection(Node* head, ball b,bool* sameColor,int* id)
 {
 	Node* p = head->next;
-	int dist = 0;
+	float dist = 0;
 	int index = 0;
 
 	while (p != NULL)
@@ -160,7 +160,7 @@ void drawBallList(Node* head)
 }
 
 //绘制碰撞球
-void drawColBall(ball* b, int x, int y)
+void drawColBall(ball* b, float x, float y)
 {
 	b->x = x;
 	b->y = y;
@@ -242,11 +242,9 @@ bool inRect(int mx, int my, int x, int y, int w, int h)
 
 int main()
 {
-	// 以桌面分辨率创建大缓冲，窗口初始缩放为 600x600
+	// 以初始窗口尺寸创建图形缓冲区，避免坐标系与桌面分辨率不一致
 	{
-		RECT wa;
-		SystemParametersInfo(SPI_GETWORKAREA, 0, &wa, 0);
-		initgraph(wa.right - wa.left, wa.bottom - wa.top);
+		initgraph(winWidth, winHeight);
 
 		HWND hwnd = GetHWnd();
 		SetWindowLongPtr(hwnd, GWL_STYLE,

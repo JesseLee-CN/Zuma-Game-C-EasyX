@@ -10,8 +10,8 @@ extern int BALLRADIUS;
 
 struct ball
 {
-	int x;
-	int y;
+	float x;
+	float y;
 	int c;
 };
 
