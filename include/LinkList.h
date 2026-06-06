@@ -13,6 +13,7 @@ typedef struct Node
 {
     DataType data;
     struct Node *next;
+    struct Node *prev;
 } Node;
 
 

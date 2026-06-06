@@ -1,41 +1,25 @@
 #include "LinkList.h"
 
 
-/*
-Args: 
-    * None.
-Return: 
-    * Pointer of the head node.
-Description:
-    * Create an empty linked list with a head node.
-    * The "next" field of the head node should point to NULL.
-*/
 Node* CreateEmptyList()
 {
 	Node* head;
-	
+
 	head =(Node*) malloc(sizeof(Node));
 	head->next = NULL;
+	head->prev = NULL;
 
 	return head;
 }
 
 
-/*
-Args:
-    * addr: pointer of an array.
-    * n: length of the array.
-Return:
-    * Pointer of the head node.
-Description:
-    * Initialize a linked list with an array.
-*/
 Node* CreateList(DataType *addr, unsigned int n)
 {
 	Node *head;
 
 	head = (Node*) malloc(sizeof(Node));
 	head->next = NULL;
+	head->prev = NULL;
 
 	for (unsigned int i = 0; i < n; i++)
 	{
@@ -46,20 +30,10 @@ Node* CreateList(DataType *addr, unsigned int n)
 }
 
 
-/*
-Args:
-    * head: pointer of the head node.
-Returns:
-    * None
-Description:
-    * Destroy the linked list.
-    * Release all allocated memory.
-*/
 void DestroyList(Node *head)
 {
 	Node *p;
 
-	
 	while (head->next != NULL)
 	{
 		p = head->next;
@@ -67,22 +41,9 @@ void DestroyList(Node *head)
 		head = p;
 	}
 	free(head);
-
 }
 
 
-/*
-Args:
-    * head: pointer of the head node.
-    * index: index of the inserted data.
-    * data: the inserted data.
-Returns:
-    * None.
-Description:
-    *   If the linked list is "head->3->5->2",
-    * when you call (head, 0, 6), the linked 
-    * list will be "head->6->3->5->2".
-*/
 void ListInsert(Node *head, unsigned int index, DataType data)
 {
 	unsigned int j = 0;
@@ -99,21 +60,13 @@ void ListInsert(Node *head, unsigned int index, DataType data)
 	Node *s = (Node*)malloc(sizeof(Node));
 	s->data = data;
 	s->next = p->next;
+	s->prev = p;
+	if (p->next != NULL)
+		p->next->prev = s;
 	p->next = s;
 }
 
 
-/*
-Args:
-    * head: pointer of the head node.
-    * index: index of the deleted data.
-Returns:
-    * The deleted data.
-Description:
-    *   If the linked list is "head->3->5->2",
-    * when you call (head, 2), the linked 
-    * list will be "head->3->5".
-*/
 DataType ListDelete(Node *head, unsigned int index)
 {
 	unsigned int j = 0;
@@ -129,55 +82,64 @@ DataType ListDelete(Node *head, unsigned int index)
 
 	q = p->next;
 	p->next = q->next;
+	if (q->next != NULL)
+		q->next->prev = p;
 	data = q->data;
 	free(q);
 
 	return data;
 }
 
+
 int EliminateRuns(Node *head)
 {
 	int totalScore = 0;
 	int chainLevel = 0;
-	bool found;
 
-	do {
-		found = false;
-		Node *prev = head;
+	Node *curr = head->next;
+	if (curr == NULL) return 0;
 
-		while (prev->next != NULL && prev->next->next != NULL) {
-			Node *runStart = prev->next;
-			int color = runStart->data.c;
-			int count = 1;
-			Node *runEnd = runStart;
+	while (curr != NULL && curr->next != NULL) {
+		int color = curr->data.c;
+		int count = 1;
+		Node *runEnd = curr;
 
-			while (runEnd->next != NULL && runEnd->next->data.c == color) {
-				runEnd = runEnd->next;
-				count++;
-			}
-
-			if (count >= 3) {
-				Node *p = runStart;
-				Node *afterRun = runEnd->next;
-				while (p != afterRun) {
-					Node *next = p->next;
-					free(p);
-					p = next;
-				}
-				prev->next = afterRun;
-
-				chainLevel++;
-				int baseScore = count * count * 10;
-				double chainMul = 1.0 + (chainLevel - 1) * 0.5;
-				totalScore += (int)(baseScore * chainMul);
-
-				found = true;
-				break;
-			}
-
-			prev = runEnd;
+		while (runEnd->next != NULL && runEnd->next->data.c == color) {
+			runEnd = runEnd->next;
+			count++;
 		}
-	} while (found);
+
+		if (count >= 3) {
+			Node *before = curr->prev;
+			Node *after  = runEnd->next;
+
+			Node *p = curr;
+			while (p != after) {
+				Node *next = p->next;
+				free(p);
+				p = next;
+			}
+
+			before->next = after;
+			if (after != NULL)
+				after->prev = before;
+
+			chainLevel++;
+			int baseScore = count * count * 10;
+			double chainMul = 1.0 + (chainLevel - 1) * 0.5;
+			totalScore += (int)(baseScore * chainMul);
+
+			curr = before;
+			if (curr == head) {
+				curr = head->next;
+			} else {
+				while (curr->prev != head && curr->prev->data.c == curr->data.c)
+					curr = curr->prev;
+			}
+		} else {
+			curr = runEnd->next;
+		}
+	}
 
 	return totalScore;
 }
