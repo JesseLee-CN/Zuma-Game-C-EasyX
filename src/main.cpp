@@ -303,7 +303,7 @@ int main()
 	// Game objects (allocated when entering PLAYING)
 	Node* head = NULL;
 	ball cball;
-	float speed = 10;
+
 	MOUSEMSG m;
 	bool ballMoving = FALSE;
 	bool aiming = FALSE;
@@ -535,8 +535,8 @@ int main()
 						float dy = centerY - m.y;
 						float length = sqrt(dx * dx + dy * dy);
 						if (length > 0) {
-							vx = (dx / length) * speed;
-							vy = (dy / length) * speed;
+							vx = (dx / length) * BALLRADIUS;
+							vy = (dy / length) * BALLRADIUS;
 						}
 						if (remainingShots > 0)
 							remainingShots--;
