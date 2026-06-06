@@ -112,31 +112,45 @@ void updateBallPos(Node* head)
 	}
 }
 
-//碰撞检测
-bool collisionDetection(Node* head, ball b,bool* sameColor,int* id)
+// 碰撞检测：找到发射球与球链的碰撞段，返回插入索引
+// 策略：找距离最近的两个球，若相邻则插入二者之间，否则插入最近球之前
+bool collisionDetection(Node* head, ball b, int* id)
 {
+	int threshold = 2 * BALLRADIUS;
+	int threshSq = threshold * threshold;
+
 	Node* p = head->next;
-	float dist = 0;
 	int index = 0;
 
-	while (p != NULL)
-	{
-		dist = (p->data.x - b.x) * (p->data.x - b.x) + (p->data.y - b.y) * (p->data.y - b.y);
-		int threshold = 2 * BALLRADIUS;
-		if (dist < threshold * threshold)
-		{
-			if (b.c == p->data.c)
-				* (sameColor) = TRUE;
-			else
-				*(sameColor) = FALSE;
-			*id = index;
-			return TRUE;
+	float best1 = 1e9f, best2 = 1e9f;
+	int idx1 = -1, idx2 = -1;
+
+	while (p != NULL) {
+		float dx = p->data.x - b.x;
+		float dy = p->data.y - b.y;
+		float dist = dx * dx + dy * dy;
+
+		if (dist < best1) {
+			best2 = best1; idx2 = idx1;
+			best1 = dist;  idx1 = index;
+		} else if (dist < best2) {
+			best2 = dist;  idx2 = index;
 		}
 
 		p = p->next;
 		index++;
 	}
-	return FALSE;
+
+	if (idx1 < 0 || best1 > threshSq)
+		return FALSE;
+
+	// 两最近球是否在链中相邻？若相邻则插入二者之间
+	if (idx2 >= 0 && (idx1 == idx2 + 1 || idx2 == idx1 + 1))
+		*id = (idx1 > idx2) ? idx1 : idx2;
+	else
+		*id = idx1;
+
+	return TRUE;
 }
 
 //绘制球链
@@ -739,8 +753,7 @@ int main()
 		{
 			drawSpiralGuide();
 			int id;
-			bool sameColor;
-			bool collision = collisionDetection(head, cball, &sameColor, &id);
+			bool collision = collisionDetection(head, cball, &id);
 			if (collision)
 			{
 				ListInsert(head, id, cball);
