@@ -1,5 +1,7 @@
 # Zuma-Game-C-EasyX
 
+> **注意：此仓库已停止更新。** 重构版使用 Raylib 图形库，请访问 [Zuma-Game-C-Raylib](https://github.com/JesseLee-CN/Zuma-Game-C-Raylib)。
+
 基于 C++ 与 EasyX 图形库的祖玛游戏实现（南京大学数据结构与算法课程大作业）
 
 ## 项目概述
